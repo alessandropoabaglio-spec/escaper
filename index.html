@@ -1526,7 +1526,8 @@ async function startEctoAR() {
         try {
           const { GLTFLoader } = await import('./vendor/GLTFLoader.js');
           const loader = new GLTFLoader();
-          const gltf = await loader.loadAsync('./ghost.glb');
+          const ghostUrl = new URL('ghost.glb', document.baseURI).href;
+          const gltf = await loader.loadAsync(ghostUrl);
           const model = gltf.scene;
           model.updateMatrixWorld(true);
           const bounds = new THREE.Box3().setFromObject(model);
