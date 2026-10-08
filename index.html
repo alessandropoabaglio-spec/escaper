@@ -1005,8 +1005,6 @@ const JUMPSCARE_NAMES = [
 const JUMPSCARE_BASES = [
     './Jumpscares/',
     './jumpscares/',
-    'https://raw.githubusercontent.com/alessandropoabaglio-spec/escaper/main/Jumpscares/',
-    'https://raw.githubusercontent.com/alessandropoabaglio-spec/escaper/main/jumpscares/',
     '/escaper/Jumpscares/',
     '/escaper/jumpscares/'
 ];
@@ -1053,8 +1051,6 @@ function triggerJumpscare(force = false) {
         const alternatives = [
             './jumpscares/' + JUMPSCARE_NAMES[index],
             './Jumpscares/' + JUMPSCARE_NAMES[index],
-            'https://raw.githubusercontent.com/alessandropoabaglio-spec/escaper/main/jumpscares/' + JUMPSCARE_NAMES[index],
-            'https://raw.githubusercontent.com/alessandropoabaglio-spec/escaper/main/Jumpscares/' + JUMPSCARE_NAMES[index]
         ];
         const next = alternatives.find(u => u !== img.dataset.lastTried);
         if (next) { img.dataset.lastTried = next; img.src = next + '?v=' + Date.now(); }
