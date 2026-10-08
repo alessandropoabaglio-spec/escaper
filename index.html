@@ -1506,7 +1506,7 @@ async function startEctoAR() {
         const supported = await navigator.xr.isSessionSupported('immersive-ar');
         if (!supported) throw new Error('unsupported');
         // Three.js viene caricato solo quando l'utente chiede esplicitamente l'AR.
-        const THREE = await import('https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js');
+        const THREE = await import('https://cdn.jsdelivr.net/gh/mrdoob/three.js@841d2e791d3e8a2463322c5ca31b16956828b91c/build/three.module.js');
         // Rilascia la fotocamera getUserMedia: ARCore deve poterla gestire direttamente.
         if (ectoStream) { ectoStream.getTracks().forEach(track => track.stop()); ectoStream = null; }
         const video = $('ecto-video'); if (video) { video.pause(); video.srcObject = null; }
@@ -1527,7 +1527,7 @@ async function startEctoAR() {
         let ghostMixer = null;
         let modelLoaded = false;
         try {
-          const { GLTFLoader } = await import('https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/loaders/GLTFLoader.js');
+          const { GLTFLoader } = await import('https://cdn.jsdelivr.net/gh/mrdoob/three.js@841d2e791d3e8a2463322c5ca31b16956828b91c/examples/jsm/loaders/GLTFLoader.js');
           const loader = new GLTFLoader();
           const gltf = await loader.loadAsync('./ghost.glb');
           const model = gltf.scene;
