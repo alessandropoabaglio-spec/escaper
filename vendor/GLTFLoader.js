@@ -65,7 +65,24 @@ import {
 	SRGBColorSpace,
 	InstancedBufferAttribute
 } from './three.module.min.js';
-import { toTrianglesDrawMode } from '../utils/BufferGeometryUtils.js';
+
+function toTrianglesDrawMode( geometry, drawMode ) {
+	if ( drawMode === 4 ) return geometry;
+	const index = geometry.getIndex();
+	if ( index === null ) return geometry;
+	const numberOfTriangles = index.count - 2;
+	const newIndices = [];
+	if ( drawMode === 5 ) {
+		for ( let i = 0; i < numberOfTriangles; i ++ ) {
+			if ( i % 2 === 0 ) newIndices.push( index.getX( i ), index.getX( i + 1 ), index.getX( i + 2 ) );
+			else newIndices.push( index.getX( i + 2 ), index.getX( i + 1 ), index.getX( i ) );
+		}
+	} else if ( drawMode === 6 ) {
+		for ( let i = 1; i < numberOfTriangles + 1; i ++ ) newIndices.push( index.getX( 0 ), index.getX( i ), index.getX( i + 1 ) );
+	} else return geometry;
+	geometry.setIndex( new ( index.array.constructor )( newIndices ) );
+	return geometry;
+}
 
 class GLTFLoader extends Loader {
 
