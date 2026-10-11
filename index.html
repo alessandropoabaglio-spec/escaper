@@ -1276,6 +1276,10 @@ function readCurrentStep() {
 function skipCurrentNarration() {
     const audio = $('narration-audio');
     if (audio && !audio.paused) { audio.pause(); }
+    // Una tappa saltata è comunque sbloccata: dopo un refresh non deve ripartire da sola la voce.
+    if (!Array.isArray(state.heard)) state.heard = [];
+    if (typeof state.step === 'number' && !state.heard.includes(state.step)) state.heard.push(state.step);
+    saveState();
     $('story-skip').classList.add('hidden');
     unlockStageAfterNarration();
 }
@@ -1367,7 +1371,8 @@ function startGame(fromSaved = false) {
 function resumeGame() { if (!prologueHeard) { $('seal-hint').classList.remove('hidden'); $('seal-hint').textContent = 'Prima ascoltate il prologo fino alla fine.'; return; } startGame(true); }
 function resetGame() {
     if (!confirm('Vuoi davvero cancellare i progressi e ripartire dalla tappa 0?')) return;
-    try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem('pontevecchio-prologue-heard'); } catch (e) {}
+    // Si azzerano solo i progressi della partita: aver già ascoltato il prologo resta memorizzato.
+    try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
     state = { step: 0, found: [], heard: [] };
     if (prologueHeard) {
         startGame(false);
