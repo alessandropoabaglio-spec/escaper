@@ -419,6 +419,10 @@ body.lit .title { filter: drop-shadow(0 0 30px rgba(234,248,255,.9)) drop-shadow
 .modal { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
     padding-top: calc(20px + env(safe-area-inset-top, 0px)); padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
     background: rgba(3,6,7,.94); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); animation: fadeIn .3s both; }
+/* La bussola deve poter scorrere sui telefoni con viewport ridotta: il tasto Chiudi resta raggiungibile. */
+#gps-modal { justify-content: flex-start; overflow-y: auto; overscroll-behavior: contain; }
+#gps-modal .gps-actions { padding-bottom: max(16px, env(safe-area-inset-bottom, 0px)); }
+#gps-modal .gps-actions .ghost-btn:last-child { margin-bottom: 8px; }
 .modal h3 { margin: 0 0 6px; font-family: var(--f-goth); font-weight: 700; font-size: 30px; color: var(--spectre); text-shadow: 0 0 18px rgba(92,255,160,.5); text-align: center; }
 .modal .sub { margin: 0 0 16px; font-style: italic; font-size: 14px; color: var(--bone-dim); text-align: center; }
 .ghost-btn { margin-top: 18px; padding: 12px 22px; border-radius: 999px; background: rgba(233,220,192,.06); border: 1px solid rgba(233,220,192,.25); color: var(--bone); font-family: var(--f-fell); font-size: 16px; }
@@ -1646,9 +1650,9 @@ const STAGE_COORDS = [
     { lat: 45.454263, lon: 8.864574, label: 'Farmacia' },
     { lat: 45.454159, lon: 8.858570, label: 'Retro di Villa Castiglioni' },
     { lat: 45.452200, lon: 8.860004, label: 'Ponte di Pontevecchio' },
-    { lat: 45.454138, lon: 8.858648, label: 'Scavalcavia' },
+    { lat: 45.451431, lon: 8.861617, label: 'Scavalcavia' },
     { lat: 45.449847, lon: 8.859570, label: 'Incrocio Via Cecchi / Via Brocca' },
-    { lat: 45.448479, lon: 8.853154, label: 'Mulino Ventura / Sturgin' },
+    { lat: 45.446936, lon: 8.852017, label: 'Mulino Ventura / Sturgin' },
     { lat: 45.453554, lon: 8.855446, label: 'La Cava · Via San Luigi' }
 ];
 const GPS_ARRIVAL_RADIUS = 10;
