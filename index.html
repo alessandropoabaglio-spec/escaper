@@ -757,6 +757,7 @@ body.lit .title { filter: drop-shadow(0 0 30px rgba(234,248,255,.9)) drop-shadow
                     <div class="story-window" id="story-window"><div class="story-roll" id="story-roll"></div></div>
                     <div class="story-controls">
                         <button type="button" id="story-voice" onclick="readCurrentStep()">☠ Ascolta voce</button>
+                        <button type="button" id="story-skip" class="hidden" onclick="skipCurrentNarration()">⏭ Salta narratore</button>
                         <button type="button" id="story-toggle" onclick="toggleStoryScroll()">Ⅱ Pausa testo</button>
                         <button type="button" onclick="restartStoryScroll()">↻ Rileggi</button>
                     </div>
@@ -857,12 +858,12 @@ const STAGE_AUDIO = [
 
 // ---------- Stato ----------
 const SAVE_KEY = 'pontevecchio-night-v2';
-let state = { step: 0, found: [] };
+let state = { step: 0, found: [], heard: [] };
 let html5QrCode = null, scanLocked = false, lastWrongText = '', lastWrongAt = 0, busy = false;
 
 function saveState() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch (e) {} }
 function loadState() {
-    try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && Array.isArray(s.found)) return s; } catch (e) {}
+    try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && Array.isArray(s.found)) { if (!Array.isArray(s.heard)) s.heard = []; return s; } } catch (e) {}
     return null;
 }
 const $ = id => document.getElementById(id);
@@ -1170,17 +1171,23 @@ function renderStep() {
     $('answer').placeholder = last ? "Parola dell'Acrostico" : 'Codice trovato';
     $('answer').value = '';
     $('submit-btn').textContent = last ? "Spezza l'Ultimo Sigillo" : 'Spezza il Sigillo';
-    // Il sigillo non può essere tentato finché il Vecchio Saggio non ha finito.
+    // Se il narratore di questa tappa è già stato ascoltato, non obblighiamo a riascoltarlo.
+    const heardBefore = Array.isArray(state.heard) && state.heard.includes(i);
+    $('story-skip').classList.toggle('hidden', !heardBefore);
     sageFinishedCurrentStep = false;
     $('submit-btn').disabled = true;
     $('answer').disabled = true;
     $('answer').placeholder = 'Attendi la fine del racconto…';
-    $('err').textContent = '☠ Ascoltate il Vecchio Saggio fino alla fine…';
+    $('err').textContent = heardBefore ? 'Il narratore è già stato ascoltato: puoi saltarlo oppure riascoltarlo.' : '☠ Ascoltate il Vecchio Saggio fino alla fine…';
     renderTrack();
     showScreen('stage');
     restart($('stage'), ['enter']);
-    // Avvia automaticamente la lettura della tappa; i comandi si sbloccano a fine voce.
-    setTimeout(() => readCurrentStep(), 350);
+    if (heardBefore) {
+        skipCurrentNarration();
+    } else {
+        // Prima visita: lettura automatica come prima.
+        setTimeout(() => readCurrentStep(), 350);
+    }
 }
 function toggleStoryScroll() {
     const roll = $('story-roll');
@@ -1240,7 +1247,13 @@ function readCurrentStep() {
     const audio = $('narration-audio');
     audio.pause(); audio.currentTime = 0;
     audio.src = STAGE_AUDIO[state.step] || '';
-    audio.onended = () => { btn.textContent = '↻ Ascolta ancora'; unlockStageAfterNarration(); };
+    audio.onended = () => {
+        if (!Array.isArray(state.heard)) state.heard = [];
+        if (!state.heard.includes(state.step)) state.heard.push(state.step);
+        saveState();
+        btn.textContent = '↻ Ascolta ancora';
+        unlockStageAfterNarration();
+    };
     audio.onerror = () => {
         btn.textContent = '↻ Riprova voce';
         $('err').textContent = 'Non riesco a caricare la voce registrata. Controllate il nome del file audio su GitHub.';
@@ -1252,6 +1265,12 @@ function readCurrentStep() {
     });
 }
 
+function skipCurrentNarration() {
+    const audio = $('narration-audio');
+    if (audio && !audio.paused) { audio.pause(); }
+    $('story-skip').classList.add('hidden');
+    unlockStageAfterNarration();
+}
 function unlockStageAfterNarration() {
     sageFinishedCurrentStep = true;
     $('submit-btn').disabled = false;
@@ -1271,6 +1290,7 @@ function readPrologue() {
     audio.pause(); audio.currentTime = 0;
     audio.onended = () => {
         prologueHeard = true;
+        try { localStorage.setItem('pontevecchio-prologue-heard', '1'); } catch (e) {}
         startBtn.disabled = false;
         $('resume-btn').disabled = false;
         btn.textContent = '↻ Riascolta il prologo';
@@ -1326,7 +1346,7 @@ async function checkAnswer() {
 function startGame(fromSaved = false) {
     if (!prologueHeard) { $('seal-hint').classList.remove('hidden'); $('seal-hint').textContent = 'Prima ascoltate il prologo fino alla fine.'; $('new-game-btn').disabled = true; $('resume-btn').disabled = true; return; }
     audioInit();
-    if (!fromSaved) state = { step: 0, found: [] };
+    if (!fromSaved) state = { step: 0, found: [], heard: [] };
     saveState();
     const bg = $('bg-music');
     if (bg && state.step !== 'fine') { bg.volume = .5; bg.play().catch(() => {}); }
@@ -1339,8 +1359,8 @@ function startGame(fromSaved = false) {
 function resumeGame() { if (!prologueHeard) { $('seal-hint').classList.remove('hidden'); $('seal-hint').textContent = 'Prima ascoltate il prologo fino alla fine.'; return; } startGame(true); }
 function resetGame() {
     if (!confirm('Vuoi davvero cancellare i progressi e ripartire dalla tappa 0?')) return;
-    try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
-    state = { step: 0, found: [] };
+    try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem('pontevecchio-prologue-heard'); } catch (e) {}
+    state = { step: 0, found: [], heard: [] };
     if (prologueHeard) {
         startGame(false);
     } else {
@@ -1350,15 +1370,20 @@ function resetGame() {
     }
 }
 function showResumeIfNeeded() {
-    // Questa versione deve partire sempre dalla Tappa 0 (Campanile),
-    // senza riprendere automaticamente una partita salvata alla Tappa 1 o oltre.
-    try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
-    state = { step: 0, found: [] };
-    $('resume-box').classList.add('hidden');
+    // Ripristina il progresso salvato senza azzerarlo al refresh del browser.
+    const saved = loadState();
+    if (saved) state = saved;
+    try { prologueHeard = localStorage.getItem('pontevecchio-prologue-heard') === '1'; } catch (e) { prologueHeard = false; }
     $('new-game-btn').classList.remove('hidden');
-    $('new-game-btn').disabled = true; // si abilita dopo aver ascoltato il prologo
-    $('seal-hint').classList.remove('hidden');
-    $('seal-hint').textContent = 'Ascoltate il prologo per iniziare dalla Tappa 0 — Campanile.';
+    $('new-game-btn').disabled = !prologueHeard;
+    $('resume-btn').disabled = !prologueHeard;
+    if (saved && (saved.step !== 0 || saved.found.length > 0 || saved.step === 'fine')) {
+        $('resume-box').classList.remove('hidden');
+        $('seal-hint').textContent = 'Progressi salvati: puoi continuare dalla tappa ' + (saved.step === 'fine' ? 'finale' : (Number(saved.step) + 1)) + '.';
+    } else {
+        $('resume-box').classList.add('hidden');
+        $('seal-hint').textContent = prologueHeard ? 'Il prologo è terminato: ora potete iniziare.' : 'Ascoltate il prologo per iniziare dalla Tappa 0 — Campanile.';
+    }
 }
 
 // ---------- Scanner QR ----------
@@ -1618,7 +1643,7 @@ const STAGE_COORDS = [
     { lat: 45.453026, lon: 8.862826, label: 'Torre e Monumento ai Caduti' },
     { lat: 45.455580, lon: 8.866008, label: "Casetta dell'Acqua" },
     { lat: 45.454263, lon: 8.864574, label: 'Farmacia' },
-    { lat: 45.451431, lon: 8.861617, label: 'Retro di Villa Castiglioni' },
+    { lat: 45.454159, lon: 8.858570, label: 'Retro di Villa Castiglioni' },
     { lat: 45.452200, lon: 8.860004, label: 'Ponte di Pontevecchio' },
     { lat: 45.454138, lon: 8.858648, label: 'Scavalcavia' },
     { lat: 45.449847, lon: 8.859570, label: 'Incrocio Via Cecchi / Via Brocca' },
