@@ -587,21 +587,27 @@ body.lit .title { filter: drop-shadow(0 0 30px rgba(234,248,255,.9)) drop-shadow
 }
 
 /* ---------- Bussola GPS reale per Pontevecchio Night ---------- */
-.gps-compass{width:min(340px,86vw);margin:12px auto 16px;display:flex;flex-direction:column;align-items:center;gap:9px}
-.gps-dial{position:relative;width:min(68vw,270px);height:min(68vw,270px);border-radius:50%;border:1px solid rgba(233,220,192,.42);background:radial-gradient(circle,#15221d 0 48%,#09110f 49% 68%,#111a18 69% 100%);box-shadow:0 0 0 7px rgba(92,255,160,.04),0 0 30px rgba(92,255,160,.12),inset 0 0 28px #000b;display:grid;place-items:center}
+#gps-modal{justify-content:flex-start;overflow-y:auto;overscroll-behavior:contain;gap:0}
+#gps-modal h3{font-size:clamp(22px,6vw,30px);margin:4px 0 6px}
+#gps-modal .sub{max-width:330px;margin:0 auto 8px;padding:0 8px;font-size:clamp(11px,3vw,14px);line-height:1.4}
+.gps-compass{width:min(340px,86vw);margin:6px auto 8px;display:flex;flex-direction:column;align-items:center;gap:7px}
+.gps-dial{position:relative;width:min(62vw,250px);height:min(62vw,250px);border-radius:50%;border:1px solid rgba(233,220,192,.42);background:radial-gradient(circle,#15221d 0 48%,#09110f 49% 68%,#111a18 69% 100%);box-shadow:0 0 0 7px rgba(92,255,160,.04),0 0 30px rgba(92,255,160,.12),inset 0 0 28px #000b;display:grid;place-items:center}
 .gps-dial:before{content:"";position:absolute;inset:13%;border:1px solid rgba(92,255,160,.18);border-radius:50%}
 .gps-dial:after{content:"N";position:absolute;top:7px;left:50%;transform:translateX(-50%);font:700 12px var(--f-type);color:var(--bone);letter-spacing:.15em}
 .gps-tick{position:absolute;inset:0;border-radius:50%;background:repeating-conic-gradient(from 0deg,rgba(233,220,192,.62) 0deg 1deg,transparent 1deg 15deg);mask:radial-gradient(transparent 0 83%,#000 84% 86%,transparent 87%);-webkit-mask:radial-gradient(transparent 0 83%,#000 84% 86%,transparent 87%)}
-.gps-arrow{width:47%;height:47%;z-index:2;filter:drop-shadow(0 0 10px rgba(92,255,160,.42));transform:rotate(0deg);transition:transform .16s ease-out;transform-origin:50% 50%}
-.gps-arrow path{fill:var(--spectre);stroke:#d8ffe8;stroke-width:1.5;stroke-linejoin:round}
+.gps-arrow{width:44%;height:58%;z-index:2;filter:drop-shadow(0 0 10px rgba(92,255,160,.55));transform:rotate(0deg);transition:transform .16s ease-out;transform-origin:50% 50%}
+.gps-arrow path:first-child{fill:#163d2b;stroke:#b5ffd3;stroke-width:1.5;stroke-linejoin:round}
+.gps-arrow path:last-child{fill:#5cffa0;stroke:#d8ffe8;stroke-width:1;stroke-linejoin:round;opacity:.92}
 .gps-center{position:absolute;z-index:3;width:12px;height:12px;border-radius:50%;background:var(--bone);border:3px solid #1a3427;box-shadow:0 0 10px #5cffa0}
-.gps-distance{font:900 27px var(--f-type);color:var(--bone);text-align:center}
-.gps-target{font:12px var(--f-type);color:var(--spectre);text-align:center;letter-spacing:.07em}
-.gps-status{min-height:38px;max-width:340px;margin:5px auto 12px;text-align:center;font:14px var(--f-fell);color:var(--bone);line-height:1.45}
-.gps-meta{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;font:10px var(--f-type);color:var(--bone-dim)}
+.gps-distance{font:900 clamp(22px,6vw,27px) var(--f-type);color:var(--bone);text-align:center;line-height:1.15}
+.gps-target{font:12px var(--f-type);color:var(--spectre);text-align:center;letter-spacing:.04em;line-height:1.4}
+.gps-status{min-height:30px;max-width:340px;margin:4px auto 8px;padding:0 12px;text-align:center;font:14px var(--f-fell);color:var(--bone);line-height:1.4}
+.gps-meta{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;font:10px var(--f-type);color:var(--bone-dim)}
 .gps-chip{padding:6px 9px;border:1px solid rgba(233,220,192,.2);border-radius:99px;background:#070c0e}
 .gps-chip.good{border-color:rgba(92,255,160,.55);color:var(--spectre)}
-.gps-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+.gps-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:6px auto 0;padding-bottom:max(18px,env(safe-area-inset-bottom,0px));width:100%}
+#gps-modal .gps-actions .ghost-btn{margin-top:8px;max-width:100%}
+@media(max-height:760px){#gps-modal{padding-top:calc(8px + env(safe-area-inset-top,0px));padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))}.gps-dial{width:min(54vw,210px);height:min(54vw,210px)}.gps-compass{gap:5px;margin:4px auto 6px}.gps-status{margin:2px auto 4px}}
 @keyframes gps-arrived{0%,100%{box-shadow:0 0 0 7px rgba(92,255,160,.04),0 0 30px rgba(92,255,160,.12),inset 0 0 28px #000b}50%{box-shadow:0 0 0 12px rgba(92,255,160,.12),0 0 42px rgba(92,255,160,.35),inset 0 0 28px #000b}}
 .gps-dial.arrived{animation:gps-arrived 1.4s infinite}
 
@@ -673,8 +679,9 @@ body.lit .title { filter: drop-shadow(0 0 30px rgba(234,248,255,.9)) drop-shadow
         <div class="gps-dial" id="gps-dial">
             <div class="gps-tick"></div>
             <svg id="gps-arrow" class="gps-arrow" viewBox="0 0 100 100" role="img" aria-label="Freccia verso la tappa">
-                <path d="M50 4 L78 78 L50 63 L22 78 Z" />
-                <path d="M50 4 L50 63 L78 78 Z" fill="#d8ffe8" opacity=".32" />
+                <path d="M50 3 L66 44 L91 82 L50 66 L9 82 L34 44 Z" />
+                <path d="M50 3 L50 66 L34 44 Z" />
+                <path d="M50 3 L66 44 L50 66 Z" fill="#d8ffe8" opacity=".65" />
             </svg>
             <div class="gps-center"></div>
         </div>
