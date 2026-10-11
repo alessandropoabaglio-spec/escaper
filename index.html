@@ -1678,10 +1678,17 @@ function openGoogleMapsWalkingRoute() {
         $('gps-status').textContent = 'Non trovo le coordinate della tappa corrente.';
         return;
     }
-    // Se il GPS del gioco è già attivo, usa la posizione rilevata come partenza.
-    // Altrimenti Google Maps userà la posizione del telefono, se disponibile.
+    // Su Android apri direttamente Google Maps in modalità pedonale.
+    // L'app calcola il percorso dalla posizione corrente del telefono.
+    const destination = target.lat + ',' + target.lon;
+    if (/Android/i.test(navigator.userAgent)) {
+        window.location.href = 'google.navigation:q=' +
+            encodeURIComponent(destination) + '&mode=w';
+        return;
+    }
+    // Fallback per iOS e altri browser: indicazioni a piedi sul sito ufficiale.
     let url = 'https://www.google.com/maps/dir/?api=1&destination=' +
-        encodeURIComponent(target.lat + ',' + target.lon) + '&travelmode=walking';
+        encodeURIComponent(destination) + '&travelmode=walking';
     if (gpsCurrentPosition && gpsCurrentPosition.coords) {
         const c = gpsCurrentPosition.coords;
         url += '&origin=' + encodeURIComponent(c.latitude + ',' + c.longitude);
