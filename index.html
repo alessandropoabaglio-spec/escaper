@@ -643,6 +643,7 @@ body.lit .title { filter: drop-shadow(0 0 30px rgba(234,248,255,.9)) drop-shadow
 <audio id="success-sound" src="audio/vittoria.mp3" preload="auto"></audio>
 <audio id="champions-sound" src="audio/finale.mp3" preload="none"></audio>
 <audio id="narration-audio" preload="auto"></audio>
+<audio id="proximity-audio" src="audio/avviso-vicinanza.mp3" preload="auto"></audio>
 <audio id="prologue-audio" src="voce-prologo.mp3" preload="auto"></audio>
 
 <!-- TRANSIZIONE: sigillo che si spezza -->
@@ -1281,6 +1282,7 @@ function skipCurrentNarration() {
 }
 function unlockStageAfterNarration() {
     sageFinishedCurrentStep = true;
+    playPendingProximityWarning();
     $('submit-btn').disabled = false;
     $('answer').disabled = false;
     $('answer').placeholder = state.step === LAST ? "Parola dell'Acrostico" : 'Codice trovato';
@@ -1658,7 +1660,16 @@ const STAGE_COORDS = [
     { lat: 45.446936, lon: 8.852017, label: 'Mulino Ventura / Sturgin' },
     { lat: 45.453554, lon: 8.855446, label: 'La Cava · Via San Luigi' }
 ];
-const GPS_ARRIVAL_RADIUS = 10;
+const GPS_ARRIVAL_RADIUS = 20;
+let proximityWarningPending = false;
+function playPendingProximityWarning() {
+    if (!proximityWarningPending) return;
+    const narration = $('narration-audio');
+    if (narration && !narration.paused && !narration.ended) return;
+    proximityWarningPending = false;
+    const warning = $('proximity-audio');
+    if (warning) { warning.currentTime = 0; warning.play().catch(() => {}); }
+}
 let gpsWatchId = null, gpsCurrentPosition = null, gpsHeading = null;
 let gpsOrientationHandler = null, gpsAbsoluteHandler = null, gpsArrivedForStep = null;
 let gpsHasAbsoluteHeading = false;
@@ -1796,14 +1807,19 @@ function updateGPSCompass() {
     else arrow.style.transform = 'rotate(' + bearing + 'deg)';
     if (distance <= GPS_ARRIVAL_RADIUS) {
         dial.classList.add('arrived');
-        $('gps-status').textContent = '✦ SEI ARRIVATO ALLA TAPPA! Entro 10 metri. Cerca il sigillo e risolvi l’enigma.';
+        $('gps-status').textContent = '✦ SEI ARRIVATO ALLA TAPPA! Entro 20 metri. Cerca il sigillo e risolvi l’enigma.';
         $('gps-status').style.color = 'var(--spectre)';
-        if (gpsArrivedForStep !== i) { gpsArrivedForStep = i; playSound('arrival-audio'); }
+        if (gpsArrivedForStep !== i) {
+            gpsArrivedForStep = i;
+            const narration = $('narration-audio');
+            if (narration && !narration.paused && !narration.ended) proximityWarningPending = true;
+            else { proximityWarningPending = true; playPendingProximityWarning(); }
+        }
     } else {
         dial.classList.remove('arrived');
         $('gps-status').style.color = 'var(--bone)';
         const direction = gpsHeading === null ? 'Attendi la bussola per orientare la freccia rispetto al telefono.' : (Math.abs(((bearing-gpsHeading+540)%360)-180) < 18 ? 'Sei rivolto verso la tappa: procedi con attenzione.' : 'Ruota il telefono finché la freccia punta davanti a te, poi seguila.');
-        $('gps-status').textContent = direction + ' L’arrivo viene riconosciuto entro 10 metri.';
+        $('gps-status').textContent = direction + ' L’arrivo viene riconosciuto entro 20 metri.';
     }
 }
 // Aggiorna l'etichetta e la direzione se si passa alla tappa successiva nel gioco.
