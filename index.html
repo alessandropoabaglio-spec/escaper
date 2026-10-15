@@ -1354,6 +1354,12 @@ async function checkAnswer() {
 function startGame(fromSaved = false) {
     if (!prologueHeard) { $('seal-hint').classList.remove('hidden'); $('seal-hint').textContent = 'Prima ascoltate il prologo fino alla fine.'; $('new-game-btn').disabled = true; $('resume-btn').disabled = true; return; }
     audioInit();
+    // Non azzerare mai progressi esistenti con il pulsante "Inizia".
+    // L'unica azione che può cancellarli è resetGame(), dopo conferma esplicita.
+    const hasSavedProgress = state.step === 'fine' ||
+        (typeof state.step === 'number' && state.step > 0) ||
+        (Array.isArray(state.found) && state.found.length > 0);
+    if (!fromSaved && hasSavedProgress) fromSaved = true;
     if (!fromSaved) state = { step: 0, found: [], heard: [] };
     saveState();
     const bg = $('bg-music');
