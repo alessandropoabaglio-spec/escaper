@@ -1240,6 +1240,44 @@ function renderFinal() {
     showScreen('final');
     restart($('screen-final'), ['show']);
     if (!REDUCED) { strike(); setTimeout(() => strike(), 1700); setTimeout(() => strike(true), 3200); }
+    startEscapeNight2Finale();
+}
+let escapeNight2Started = false;
+function startEscapeNight2Finale() {
+    if (escapeNight2Started) return;
+    escapeNight2Started = true;
+    const victory = $('champions-sound');
+    const shock = new Audio('audio/electric_shock_10s.mp3');
+    const teaserMusic = new Audio('audio/mr_crowley.mp3');
+    const overlay = document.createElement('div');
+    overlay.id = 'escape-night2-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#000;display:none;overflow:hidden;color:#fff;text-align:center;';
+    document.body.appendChild(overlay);
+    setTimeout(() => {
+        if (victory) { victory.pause(); victory.currentTime = 0; }
+        overlay.style.display = 'block';
+        overlay.innerHTML = '<div style="position:absolute;inset:0;display:flex;flex-wrap:wrap;align-content:space-around;justify-content:space-around;font-size:clamp(48px,14vw,140px);color:#dff;text-shadow:0 0 24px #00bfff">⚡ ⚡ ⚡<br>⚡ ⚡ ⚡</div>';
+        overlay.style.animation = 'en2-shake .09s infinite';
+        const shakeStyle = document.createElement('style');
+        shakeStyle.textContent = '@keyframes en2-shake{0%,100%{transform:translate(0,0)}20%{transform:translate(-7px,4px) rotate(-1deg)}40%{transform:translate(6px,-5px) rotate(1deg)}60%{transform:translate(-5px,-3px)}80%{transform:translate(5px,5px)}}';
+        document.head.appendChild(shakeStyle);
+        shock.play().catch(() => {});
+        if ('vibrate' in navigator) navigator.vibrate([180,80,220,60,300,80,220,60,300]);
+        setTimeout(() => {
+            shock.pause(); shock.currentTime = 0;
+            if ('vibrate' in navigator) navigator.vibrate(0);
+            overlay.style.animation = 'none';
+            overlay.innerHTML = '<div style="position:absolute;left:0;right:0;top:50%;height:3px;background:#fff;animation:en2-tv-off .35s forwards"></div>';
+            const offStyle = document.createElement('style');
+            offStyle.textContent = '@keyframes en2-tv-off{0%{transform:scaleY(1);opacity:1}70%{transform:scaleY(.03)}100%{transform:scaleY(0);opacity:0}}';
+            document.head.appendChild(offStyle);
+            setTimeout(() => {
+                overlay.innerHTML = '<div style="position:absolute;inset:0;background:#000"></div><div style="position:absolute;inset:0;background:#000 url(\'img/escape-night-2-2027.png\') center/contain no-repeat;opacity:0;transition:opacity 1.2s"><div style="position:absolute;inset:auto 0 8%;font:900 clamp(24px,6vw,58px) Georgia,serif;letter-spacing:.08em;text-shadow:0 0 12px #b00000,0 3px 8px #000;color:#fff">ESCAPE NIGHT 2<br><span style="font-size:.58em">PONTEVECCHIO · 2027</span></div></div>';
+                const card=overlay.children[1];
+                setTimeout(()=>{card.style.opacity='1';teaserMusic.volume=.85;teaserMusic.play().catch(()=>{});},80);
+            },4000);
+        },10000);
+    },30000);
 }
 
 // ---------- Transizione: sigillo che si spezza ----------
