@@ -170,8 +170,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
     font-family: var(--f-type); font-size: 11px; letter-spacing: .06em;
     box-shadow: 0 0 14px rgba(92,255,160,.15), inset 0 0 10px rgba(92,255,160,.08);
 }
-.music-toggle { padding:5px 8px; font-size:10px; border-radius:999px; border:1px solid rgba(233,220,192,.28); background:rgba(0,0,0,.55); color:var(--bone-dim); white-space:nowrap; }
-.music-toggle.paused { border-color:rgba(92,255,160,.45); color:var(--spectre); }
 .radar-btn .ping { width: 8px; height: 8px; border-radius: 50%; background: var(--spectre); box-shadow: 0 0 8px var(--spectre); animation: ping 1.8s ease-out infinite; }
 @keyframes ping { 0% { box-shadow: 0 0 0 0 rgba(92,255,160,.7); } 100% { box-shadow: 0 0 0 10px rgba(92,255,160,0); } }
 
@@ -1122,22 +1120,15 @@ function strike(faint = false) {
     })();
 })();
 
-// ---------- Audio ----------
-function toggleBackgroundMusic() {
-    const bg = $('bg-music'), btn = $('music-toggle');
-    if (!bg || !btn) return;
-    if (bg.paused) {
-        bg.play().then(() => {
-            btn.textContent = '♫ Pausa musica';
-            btn.classList.remove('paused');
-            btn.setAttribute('aria-label', 'Metti in pausa la musica');
-        }).catch(() => { btn.textContent = '▶ Riprendi musica'; });
-    } else {
-        bg.pause();
-        btn.textContent = '▶ Riprendi musica';
-        btn.classList.add('paused');
-        btn.setAttribute('aria-label', 'Riprendi la musica');
-    }
+// ---------- Audio: musica attenuata automaticamente durante la narrazione ----------
+const MUSIC_NORMAL_VOLUME = 0.42;
+const MUSIC_DUCK_VOLUME = 0.08;
+let narrationMusicDuck = 0;
+function setNarrationMusicDuck(active) {
+    const bg = $('bg-music');
+    if (!bg) return;
+    narrationMusicDuck = active ? narrationMusicDuck + 1 : Math.max(0, narrationMusicDuck - 1);
+    bg.volume = narrationMusicDuck > 0 ? MUSIC_DUCK_VOLUME : MUSIC_NORMAL_VOLUME;
 }
 function playSound(id) { const a = $(id); if (a) { a.currentTime = 0; a.play().catch(() => {}); } }
 function unlockAudio(id) {
@@ -1274,7 +1265,9 @@ function readCurrentStep() {
     const audio = $('narration-audio');
     audio.pause(); audio.currentTime = 0;
     audio.src = STAGE_AUDIO[state.step] || '';
+    setNarrationMusicDuck(true);
     audio.onended = () => {
+        setNarrationMusicDuck(false);
         if (!Array.isArray(state.heard)) state.heard = [];
         if (!state.heard.includes(state.step)) state.heard.push(state.step);
         saveState();
@@ -1282,11 +1275,13 @@ function readCurrentStep() {
         unlockStageAfterNarration();
     };
     audio.onerror = () => {
+        setNarrationMusicDuck(false);
         btn.textContent = '↻ Riprova voce';
         $('err').textContent = 'Non riesco a caricare la voce registrata. Controllate il nome del file audio su GitHub.';
         // Keep the seal locked: never substitute the browser's female voice.
     };
     audio.play().catch(() => {
+        setNarrationMusicDuck(false);
         btn.textContent = '▶ Tocca per ascoltare';
         $('err').textContent = 'Premete “Ascolta voce” per avviare il racconto.';
     });
@@ -1295,6 +1290,7 @@ function readCurrentStep() {
 function skipCurrentNarration() {
     const audio = $('narration-audio');
     if (audio && !audio.paused) { audio.pause(); }
+    setNarrationMusicDuck(false);
     $('story-skip').classList.add('hidden');
     unlockStageAfterNarration();
 }
@@ -1315,7 +1311,9 @@ function readPrologue() {
     startBtn.disabled = true;
     btn.textContent = '◼ Il Vecchio Saggio sta parlando…';
     audio.pause(); audio.currentTime = 0;
+    setNarrationMusicDuck(true);
     audio.onended = () => {
+        setNarrationMusicDuck(false);
         prologueHeard = true;
         try { localStorage.setItem('pontevecchio-prologue-heard', '1'); } catch (e) {}
         startBtn.disabled = false;
@@ -1324,11 +1322,13 @@ function readPrologue() {
         $('seal-hint').textContent = 'Il prologo è terminato: ora potete iniziare';
     };
     audio.onerror = () => {
+        setNarrationMusicDuck(false);
         startBtn.disabled = true;
         btn.textContent = 'Audio del prologo non trovato';
         $('seal-hint').textContent = 'Controllate che voce-prologo.mp3 sia nella stessa cartella di index.html';
     };
     audio.play().catch(() => {
+        setNarrationMusicDuck(false);
         btn.textContent = '▶ Tocca per ascoltare il prologo';
         $('seal-hint').textContent = 'Il prologo deve essere ascoltato per intero prima di iniziare.';
     });
