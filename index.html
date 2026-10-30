@@ -1246,7 +1246,7 @@ function renderFinal() {
     $('master-code').textContent = f.map(w => w[0]).join('-') + ' (' + f.join('-') + ')';
     renderTrack(); showScreen('final'); restart($('screen-final'), ['show']);
     if (!REDUCED) { strike(); setTimeout(() => strike(), 1700); setTimeout(() => strike(true), 3200); }
-    // Finale: vittoria 30s, scarica elettrica 10s, TV spenta, 4s nero, teaser.
+    // Finale: vittoria 15s, scarica elettrica 10s, effetto TV off, audio anticipato sul nero.
     if (window.escape2Timer) clearTimeout(window.escape2Timer);
     const teaser = $('escape2-teaser'), shock = $('escape2-shock'), song = $('escape2-mr-crowley');
     if (teaser) { teaser.style.display='none'; teaser.classList.add('hidden'); }
@@ -1256,13 +1256,15 @@ function renderFinal() {
       const finalScreen=$('screen-final'); finalScreen.style.animation='escape2shake .12s infinite';
       if('vibrate' in navigator) navigator.vibrate([250,80,250,80,500]);
       setTimeout(()=>{if(shock){shock.pause();shock.currentTime=0;} finalScreen.style.animation='';
-        finalScreen.style.transition='opacity .8s'; finalScreen.style.opacity='0';
-        setTimeout(()=>{finalScreen.classList.add('hidden'); finalScreen.style.opacity='';
-          if(teaser){teaser.classList.remove('hidden');teaser.style.display='flex'; const tv=$('escape2-tv'); tv.style.opacity='1';
-            setTimeout(()=>{tv.style.opacity='0'; if(song){song.currentTime=0;song.volume=.85;song.play().catch(()=>{});}},4000);}
-        },900);
+        finalScreen.style.transition='opacity .18s, transform .45s'; finalScreen.style.opacity='1'; finalScreen.style.filter='brightness(4)';
+        setTimeout(()=>{finalScreen.style.filter='brightness(0)'; finalScreen.style.transform='scaleY(.012)';},180);
+        setTimeout(()=>{finalScreen.classList.add('hidden'); finalScreen.style.opacity=''; finalScreen.style.filter=''; finalScreen.style.transform=''; finalScreen.style.transition='';
+          if(teaser){teaser.classList.remove('hidden');teaser.style.display='flex'; const tv=$('escape2-tv'), content=$('escape2-content'); tv.style.opacity='1'; content.style.opacity='0';
+            if(song){song.currentTime=0;song.volume=.85;song.play().catch(()=>{});}
+            setTimeout(()=>{tv.style.opacity='0'; content.style.transition='opacity .7s'; content.style.opacity='1';},1500);}
+        },1200);
       },10000);
-    },30000);
+    },15000);
 }
 
 
