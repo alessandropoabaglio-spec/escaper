@@ -613,6 +613,7 @@ body.lit .title { filter: drop-shadow(0 0 30px rgba(234,248,255,.9)) drop-shadow
 @keyframes gps-arrived{0%,100%{box-shadow:0 0 0 7px rgba(92,255,160,.04),0 0 30px rgba(92,255,160,.12),inset 0 0 28px #000b}50%{box-shadow:0 0 0 12px rgba(92,255,160,.12),0 0 42px rgba(92,255,160,.35),inset 0 0 28px #000b}}
 .gps-dial.arrived{animation:gps-arrived 1.4s infinite}
 
+@keyframes escape2shake{0%,100%{transform:translate(0)}25%{transform:translate(-5px,3px)}50%{transform:translate(5px,-2px)}75%{transform:translate(-3px,-4px)}}
 </style>
 </head>
 <body>
@@ -639,6 +640,13 @@ body.lit .title { filter: drop-shadow(0 0 30px rgba(234,248,255,.9)) drop-shadow
 <svg id="bolt" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d=""/><path d=""/></svg>
 <div id="jumpscare" aria-hidden="true"><div class="js-face"><img id="js-gif" class="js-gif" alt="" src=""><div class="js-label">ERRORE…</div></div></div>
 
+<!-- Finale Escape Night 2 -->
+<div id="escape2-teaser" class="hidden" style="position:fixed;inset:0;z-index:99999;background:#000;color:#eee;display:none;align-items:center;justify-content:center;text-align:center;flex-direction:column;padding:24px">
+<div id="escape2-tv" style="position:absolute;inset:0;background:#050505;opacity:1;transition:opacity 1.2s"></div>
+<div id="escape2-content" style="position:relative;z-index:1;max-width:900px;width:100%">
+<img src="img/escape-night-2-2027.png" alt="Escape Night 2 Pontevecchio 2027" style="width:min(100%,780px);max-height:72vh;object-fit:contain;filter:drop-shadow(0 0 24px #7d0000)">
+<h1 style="letter-spacing:.12em;color:#b90000;text-shadow:0 0 16px #900">ESCAPE NIGHT 2</h1><p style="letter-spacing:.3em">PONTEVECCHIO · 2027</p><p>Manca ancora un frammento…</p></div></div>
+<audio id="escape2-shock" src="audio/electric_shock_10s.mp3" preload="auto"></audio><audio id="escape2-mr-crowley" src="audio/mr_crowley.mp3" preload="auto"></audio>
 <!-- AUDIO (sottofondo e finale devono essere brani royalty-free) -->
 <audio id="bg-music" src="audio/sottofondo.mp3" loop preload="auto"></audio>
 <audio id="error-sound" src="audio/errore.mp3" preload="auto"></audio>
@@ -1236,11 +1244,27 @@ function renderFinal() {
     const f = state.found.slice(0, 8);
     $('letters').innerHTML = f.map((w, k) => '<span class="l" style="--i:' + k + '">' + sealSVG('') + '<b>' + w[0] + '</b></span>').join('');
     $('master-code').textContent = f.map(w => w[0]).join('-') + ' (' + f.join('-') + ')';
-    renderTrack();
-    showScreen('final');
-    restart($('screen-final'), ['show']);
+    renderTrack(); showScreen('final'); restart($('screen-final'), ['show']);
     if (!REDUCED) { strike(); setTimeout(() => strike(), 1700); setTimeout(() => strike(true), 3200); }
+    // Finale: vittoria 30s, scarica elettrica 10s, TV spenta, 4s nero, teaser.
+    if (window.escape2Timer) clearTimeout(window.escape2Timer);
+    const teaser = $('escape2-teaser'), shock = $('escape2-shock'), song = $('escape2-mr-crowley');
+    if (teaser) { teaser.style.display='none'; teaser.classList.add('hidden'); }
+    window.escape2Timer = setTimeout(() => {
+      const bg=$('bg-music'), win=$('champions-sound'); if(bg) bg.pause(); if(win){win.pause();win.currentTime=0;}
+      if(shock){shock.currentTime=0;shock.volume=1;shock.play().catch(()=>{});}
+      const finalScreen=$('screen-final'); finalScreen.style.animation='escape2shake .12s infinite';
+      if('vibrate' in navigator) navigator.vibrate([250,80,250,80,500]);
+      setTimeout(()=>{if(shock){shock.pause();shock.currentTime=0;} finalScreen.style.animation='';
+        finalScreen.style.transition='opacity .8s'; finalScreen.style.opacity='0';
+        setTimeout(()=>{finalScreen.classList.add('hidden'); finalScreen.style.opacity='';
+          if(teaser){teaser.classList.remove('hidden');teaser.style.display='flex'; const tv=$('escape2-tv'); tv.style.opacity='1';
+            setTimeout(()=>{tv.style.opacity='0'; if(song){song.currentTime=0;song.volume=.85;song.play().catch(()=>{});}},4000);}
+        },900);
+      },10000);
+    },30000);
 }
+
 
 // ---------- Transizione: sigillo che si spezza ----------
 function sealBreak(label, then) {
