@@ -1388,6 +1388,11 @@ function showError(msg) {
     triggerJumpscare(true);
 }
 async function checkAnswer() {
+    // Codice segreto organizzatori: porta direttamente alla tappa finale (Cava).
+    if (normalizeAnswer($('answer').value) === 'CODICE SEGRETO') {
+        state = { step: LAST, found: ['TORRE','ACQUA','FARMACIA','ALBERI','PONTE','FERRO','BIVIO','MULINO'], heard: [] };
+        saveState(); audioInit(); keepScreenOn(); renderStep(); readCurrentStep(); return;
+    }
     if (busy || !sageFinishedCurrentStep) { $('err').textContent = 'Attendete che il Vecchio Saggio finisca di leggere.'; return; }
     const val = $('answer').value;
     if (!val.trim()) { $('answer').focus(); return; }
